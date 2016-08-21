@@ -1,0 +1,60 @@
+Setting up Ubuntu server for FFMPEG:
+1. Download 14.04.5 Ubuntu Server (from torrent)
+2. Install in VMWARE (SSH Server option)
+3. FFMPEG from source (https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu):
+sudo apt-get update
+sudo apt-get -y install autoconf automake build-essential libass-dev libfreetype6-dev \
+  libtheora-dev libtool libvorbis-dev \
+  pkg-config texinfo zlib1g-dev
+mkdir ~/ffmpeg_sources
+sudo apt-get install yasm
+sudo apt-get install libx264-dev
+sudo apt-get install libmp3lame-dev
+cd ~/ffmpeg_sources
+wget http://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2
+tar xjvf ffmpeg-snapshot.tar.bz2
+cd ffmpeg
+PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
+  --prefix="$HOME/ffmpeg_build" \
+  --pkg-config-flags="--static" \
+  --extra-cflags="-I$HOME/ffmpeg_build/include" \
+  --extra-ldflags="-L$HOME/ffmpeg_build/lib" \
+  --bindir="$HOME/bin" \
+  --enable-gpl \
+  --enable-libass \
+  --enable-libfreetype \
+  --enable-libmp3lame \
+  --enable-libtheora \
+  --enable-libx264 \
+  --enable-nonfree
+PATH="$HOME/bin:$PATH" make
+make install
+make distclean
+hash -r
+echo "MANPATH_MAP $HOME/bin $HOME/ffmpeg_build/share/man" >> ~/.manpath
+
+install pip:
+sudo apt-get -y install python-pip
+
+install ffmpy:
+sudo pip install ffmpy
+
+try wrapping/transcoding:
+
+ffmpeg -i input -c:v mpeg2video -b:v 12M -pix_fmt yuv422p -c:a pcm_s16le -map 0 output.mxf
+
+ffmpeg -i ~/incoming/ztest.mp4 -codec copy -r 25 -y ~/outgoing/ztest_OP1A.mxf
+
+ffmpeg -i ~/incoming/ztest.mp4 -c:v mpeg2video -c:a pcm_s16le  -pix_fmt yuv422p -b:v 30M -r 25 -y ~/outgoing/ztest_OP1A.mxf
+
+ ffmpeg -i ~/incoming/ztest.mp4 -f mxf_d10 -c:v mpeg2video -c:a pcm_s16le -pix_fmt yuv422p -b:v 30M -r 25 -y ~/outgoing/ztest_OP1A.mxf
+
+ ffmpeg -i ~/incoming/ztest.mp4 -f mxf_d10 -c:v mpeg2video -c:a pcm_s24le -g 1 -pix_fmt yuv422p -b:v 30M -r 25 -d10_channelcount 4 -y ~/outgoing/ztest_OP1A.mxf
+
+ffmpeg -i ~/incoming/ztest.mp4 -f mxf_d10 -c:v mpeg2video -c:a pcm_s24le -g 1 -pix_fmt yuv422p -b:v 30M -r 25 -d10_channelcount 4 -flags +ildct+low_delay -dc 10 -top 1 -y  ~/outgoing/ztest_OP1A.mxf
+
+ -color_trc bt709
+
+This string gives best result so far:
+ffmpeg -i ~/incoming/ztest.mp4 -f mxf -c:v mpeg2video -c:a pcm_s24le -g 1 -pix_fmt yuv422p -b:v 30M -r 25 -field_order tt -flags +ildct+ilme -dc 10 -top 1  -color_trc bt709 -y ~/outgoing/ztest_OP1A.mxf
+
