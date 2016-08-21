@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-## Takes input .mp4 file and transcodes and wraps to MPEG-2/WAV in MXF-30 OP1A.
+## Takes input media file and transcodes and wraps to MPEG-2/WAV in MXF-30 OP1A.
 import ffmpy
 import sys
 import time  
